@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "causar"
-version = "0.1.1"
+version = "0.1.2"
 description = "A high level testing framework for Disnake bots"
 authors = ["Skelmis <ethan@koldfusion.xyz>"]
 readme = "README.md"
