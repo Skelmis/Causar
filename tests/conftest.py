@@ -10,7 +10,7 @@ def causar() -> Causar:
     bot = commands.InteractionBot()
 
     @bot.slash_command()
-    async def ping(inter: disnake.ApplicationCommandInteraction):
+    async def interaction_send(inter: disnake.ApplicationCommandInteraction):
         await inter.send("Pong!")
         await inter.send("Second message!")
         await inter.send("Third message!")

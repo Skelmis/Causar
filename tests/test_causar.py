@@ -3,7 +3,7 @@ from causar.transactions import InteractionResponseSent
 
 
 async def test_interaction_send(causar: Causar):
-    injection: Injection = await causar.generate_injection("ping")
+    injection: Injection = await causar.generate_injection("interaction_send")
     await causar.run_command(injection)
 
     assert len(injection.transactions) == 3
