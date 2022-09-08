@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+from disnake.ext import commands
 from disnake.ext.commands import InvokableSlashCommand, InteractionBot
 
-from causar import Injection
+from causar import Injection, Faker, Cache
 
 
 class Causar:
-    def __init__(self, bot: InteractionBot):
+    def __init__(self, bot: InteractionBot, *, random_seed: int | None = None):
         self.bot: InteractionBot = bot
+        self.faker: Faker = Faker(self, random_seed)
+        self.cache: Cache = Cache(self)
 
     async def run_command(
         self,
@@ -15,7 +20,10 @@ class Causar:
         command: InvokableSlashCommand = self.bot.get_slash_command(
             injection.command_name
         )
-        await command.invoke(injection.as_interaction())
+        try:
+            await command.invoke(injection.as_interaction())
+        except commands.CommandInvokeError as e:
+            raise e
 
     async def generate_injection(self, command_name: str) -> Injection:
-        return Injection(self.bot, command_name=command_name)
+        return Injection(self, command_name=command_name)
