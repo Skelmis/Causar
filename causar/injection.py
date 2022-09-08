@@ -22,6 +22,8 @@ class Injection:
         self.command_name: str = command_name
         self._transactions: list[TransactionT] = []
 
+        self.__has_responded: bool = False
+
     def set_kwargs(self, **kwargs) -> Injection:
         """Set the keyword arguments to call the command with."""
         self._kwargs = kwargs
@@ -92,6 +94,10 @@ class Injection:
 
         return opts
 
+    @property
+    def transactions(self) -> list[TransactionT]:
+        return self._transactions
+
     def as_interaction(self) -> disnake.ApplicationCommandInteraction:
         # TODO Replace with custom guilds, channels etc
         data = {
@@ -144,11 +150,16 @@ class Injection:
                 state=self._bot._connection, data=data
             )
         )
-        aci.send = partial(
-            transactions.MessageSent.construct, transactions=self._transactions
-        )
+        aci.send = self._send_response_or_followup
         return aci
 
-    @property
-    def transactions(self) -> list[TransactionT]:
-        return self._transactions
+    async def _send_response_or_followup(self, *args, **kwargs):
+        if self.__has_responded:
+            return await transactions.InteractionFollowUpSent.construct(
+                *args, transactions=self._transactions, **kwargs
+            )
+
+        self.__has_responded = True
+        return await transactions.InteractionResponseSent.construct(
+            *args, transactions=self._transactions, **kwargs
+        )

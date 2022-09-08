@@ -13,5 +13,6 @@ def causar() -> Causar:
     async def ping(inter: disnake.ApplicationCommandInteraction):
         await inter.send("Pong!")
         await inter.send("Second message!")
+        await inter.send("Third message!")
 
     return Causar(bot)

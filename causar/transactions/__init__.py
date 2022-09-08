@@ -1,1 +1,2 @@
-from .message_sent import MessageSent
+from .interaction_response_sent import InteractionResponseSent
+from .interaction_followup_send import InteractionFollowUpSent
