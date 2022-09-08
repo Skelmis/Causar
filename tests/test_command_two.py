@@ -1,3 +1,4 @@
+import disnake
 import pytest
 from disnake.ext import commands
 
@@ -8,9 +9,12 @@ from causar.transactions import FetchChannel, MessageSent, InteractionResponseSe
 async def test_fetch_and_send_to_channel(causar: Causar):
     injection: Injection = await causar.generate_injection("command_two")
     injection.set_kwargs(channel_id=123456789)
-    with pytest.raises(commands.CommandInvokeError):
-        # disnake.NotFound
+    try:
         await causar.run_command(injection)
+    except commands.CommandInvokeError as e:
+        assert isinstance(e.original, disnake.NotFound)
+    else:
+        raise RuntimeError("Expected disnake.NotFound")
 
     assert len(injection.transactions) == 0
 
