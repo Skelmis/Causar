@@ -7,4 +7,4 @@ from .faker import Faker
 from .cache import Cache
 from .causar import Causar
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
