@@ -3,6 +3,7 @@
 ### Example user template
 
 *.json
+poetry.lock
 
 # IntelliJ project files
 .idea

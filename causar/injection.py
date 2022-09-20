@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 TransactionT = TypeVar("TransactionT", bound=Transaction, covariant=True)
 
 
+# noinspection PyMethodMayBeStatic
 class Injection:
     def __init__(
         self,
@@ -22,6 +23,7 @@ class Injection:
         metadata: InjectionMetadata | None = None,
     ):
         self._kwargs = {}
+        self._author = None
         self.causar: Causar = causar
         self.command_name: str = command_name
         self.transactions: list[TransactionT] = []
@@ -58,11 +60,50 @@ class Injection:
 
         return opts
 
+    def _member_to_datastream(self, member: disnake.Member) -> dict:
+        return {
+            "user": {
+                "username": member.name,
+                "public_flags": member.public_flags,
+                "id": str(member.id),
+                "discriminator": member.discriminator,
+                "avatar_decoration": None,  # TODO Figure out what this is
+                "avatar": member.avatar.url,
+            },
+            "roles": [str(r.id) for r in member.roles if r],
+            "premium_since": None,
+            "permissions": str(member.guild_permissions.value),
+            "pending": member.pending,
+            "nick": member.display_name,
+            "mute": False,  # TODO Figure out what this maps to,
+            "joined_at": member.joined_at.isoformat(),
+            "is_pending": False,  # TODO figure out
+            "flags": member.public_flags,
+            "deaf": False,  # TODO Figure out what this maps to
+            "communication_disabled_until": member.current_timeout,
+            "avatar": member.avatar.url,
+        }
+
+    def set_author(self, member: disnake.Member):
+        """Change the author of the interaction to a custom member."""
+        # TODO Document defaults
+        self._author = member
+
     def as_interaction(self) -> disnake.ApplicationCommandInteraction:
         self.metadata.command_name = self.command_name
+        if self._author:
+            author = self._member_to_datastream(self._author)
+        else:
+            author = self._member_to_datastream(
+                self.faker.generate_member(
+                    default_member=True,
+                    guild=self.faker.generate_guild(guild_id=self.metadata.guild_id),
+                )
+            )
+
         aci: disnake.ApplicationCommandInteraction = (
             self.causar.faker.generate_interaction(
-                kwargs=self._format_kwargs(), metadata=self.metadata
+                kwargs=self._format_kwargs(), metadata=self.metadata, author_data=author
             )
         )
         aci.send = self._send_response_or_followup

@@ -23,6 +23,10 @@ class Faker:
         if self._seed:
             random.seed(self._seed)
 
+    @property
+    def bot_state(self):
+        return self.causar.bot._connection
+
     def _generate_b64(self, *, length: int = 214, has_upper=False) -> str:
         # 214 at time of impl
         if not has_upper:
@@ -70,29 +74,92 @@ class Faker:
         return snowflake
 
     def generate_snowflake(self, timestamp: int | None = None) -> str:
-        if timestamp is None:
-            timestamp = int(datetime.datetime.now().timestamp())
-
-        return str(
-            self._generate_snowflake_raw(
-                timestamp=timestamp, worker=16, process=17, increment=12
-            )
-        )
+        return str(random.randint(100000000000000000, 999999999999999999))
 
     @overload
-    def generate_guild(self, guild_id: int, unavailable: bool = True) -> disnake.Guild:
+    def generate_member(self, default_member=True) -> disnake.Member:
         ...
+
+    @overload
+    def generate_member(
+        self, guild: disnake.Guild, default_member=True
+    ) -> disnake.Member:
+        ...
+
+    def generate_member(
+        self,
+        *,
+        default_member: bool = False,
+        guild: disnake.Guild | None = None,
+    ) -> disnake.Member:
+        if guild is None:
+            guild = self.generate_guild(guild_id=881118111967883295)
+
+        if default_member:
+            return disnake.Member(
+                data={
+                    "user": {
+                        "username": "Skelmis",
+                        "public_flags": 256,
+                        "id": "271612318947868673",
+                        "discriminator": "9135",
+                        "avatar_decoration": None,
+                        "avatar": self._generate_b64(length=32),
+                    },
+                    "roles": [],
+                    "premium_since": None,
+                    "permissions": "4398046511103",
+                    "pending": False,
+                    "nick": "Ethan",
+                    "mute": False,
+                    "joined_at": "2020-09-18T23:14:06.680000+00:00",
+                    "is_pending": False,
+                    "flags": 0,
+                    "deaf": False,
+                    "communication_disabled_until": None,
+                    "avatar": None,
+                },
+                guild=guild,
+                state=self.causar.bot._connection,
+            )
 
     def generate_guild(
         self,
         *,
         guild_id: int | str,
         unavailable: bool = True,
+        owner_id: int | None = None,
     ) -> disnake.Guild:
         data = (
             {"unavailable": unavailable, "id": str(guild_id)} if unavailable else {}
         )  # TODO Guilds with intents lol
-        return disnake.Guild(data=data, state=self.causar.bot._connection)
+        guild = disnake.Guild(data=data, state=self.causar.bot._connection)
+        if owner_id:
+            guild.owner_id = owner_id
+
+        default_role = self.generate_role(is_default_guild_role=True, guild=guild)
+        guild._roles[default_role.id] = default_role
+
+        return guild
+
+    def generate_role(
+        self, is_default_guild_role: bool = False, guild: disnake.Guild | None = None
+    ):
+        if is_default_guild_role:
+            data = {
+                "id": str(guild.id),
+                "name": "@everyone",
+                "permissions": "968552730176",
+                "position": 0,
+                "color": 0,
+                "hoist": False,
+                "managed": False,
+                "mentionable": False,
+                "icon": None,
+                "unicode_emoji": None,
+                "flags": 0,
+            }
+            return disnake.Role(data=data, state=self.bot_state, guild=guild)
 
     def generate_channel(
         self,
@@ -163,39 +230,18 @@ class Faker:
         return channel
 
     def generate_interaction(
-        self, kwargs: list[dict], metadata: InjectionMetadata
+        self,
+        *,
+        kwargs: list[dict],
+        metadata: InjectionMetadata,
+        author_data: dict,
     ) -> disnake.ApplicationCommandInteraction:
         # TODO Replace with custom guilds, channels etc
         data = {
             "version": 1,
             "type": 2,
             "token": self._generate_b64(has_upper=True),
-            "member": {
-                "user": {
-                    "username": "Skelmis",
-                    "public_flags": 256,
-                    "id": "271612318947868673",
-                    "discriminator": "9135",
-                    "avatar_decoration": None,
-                    "avatar": self._generate_b64(length=32),
-                },
-                "roles": [
-                    "737533643353751616",
-                    "737533859926638642",
-                    "806740882463653899",
-                ],
-                "premium_since": None,
-                "permissions": "4398046511103",
-                "pending": False,
-                "nick": "Ethan",
-                "mute": False,
-                "joined_at": "2020-09-18T23:14:06.680000+00:00",
-                "is_pending": False,
-                "flags": 0,
-                "deaf": False,
-                "communication_disabled_until": None,
-                "avatar": None,
-            },
+            "member": author_data,
             "locale": "en-US",
             "id": "1016666832901517383",
             "guild_locale": "en-US",
