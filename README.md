@@ -9,6 +9,10 @@ Written for my needs, open source for yours.
 
 Currently still in extremely early development so don't expect a lot.
 
+Checkout the tests directory for some examples, for more in-depth 
+examples which probably include everything Causar support check out 
+[this](https://github.com/suggestionsbot/suggestions-bot-rewrite/tree/master/tests)
+
 ---
 
 ### Support
